@@ -19,24 +19,32 @@ Requires a `.env` file with `GEMINI_API_KEY=<your_key>` in the project root.
 
 ## Architecture
 
-This is a multi-agent customer support chatbot. The backend is an Express server (`src/server.ts`) exposing a single endpoint `POST /api/chat`. The frontend is a vanilla JS/HTML single-page app served statically from `public/`.
+**Dispatch** is a multi-agent support orchestration POC. The backend is an Express server (`src/server.ts`) with a single SSE endpoint `POST /api/chat`. The frontend is a vanilla JS/HTML single-page app in `public/index.html` that animates the routing decision in real time.
 
 **Request flow:**
 
 1. User submits a question via the chat UI
-2. `POST /api/chat` receives `{ question: string }`
-3. `orchestrate()` calls Gemini with a routing prompt → gets back a JSON `{ "route": "<agent>" }` selecting one of four agents
-4. The selected agent function is called with the original question → returns a plain text answer
-5. Response `{ agent, answer }` is sent back; the UI highlights the active agent chip
+2. `POST /api/chat` streams Server-Sent Events back to the client
+3. `orchestrate()` calls Gemini → gets `{ "routes": ["<agent>", ...] }` selecting one or more agents
+4. All selected agents are called in parallel; each streams an `agent_answer` event when done
+5. The UI animates chips: all pulse while routing, chosen chip snaps highlighted, others dim
 
 **Agent structure (`src/agents/`):**
 
-- `orchestrator.ts` — routes questions to the right agent using Gemini. Falls back to `custom` if routing fails.
-- `productAgent.ts` — handles product/pricing/specs questions
-- `shippingAgent.ts` — handles delivery/tracking questions
-- `refundAgent.ts` — handles returns/cancellations
-- `customDataAgent.ts` — handles company-specific questions; the `CUSTOM_KNOWLEDGE` constant at the top is where you inject company-specific facts
+- `orchestrator.ts` — routes questions using Gemini. Falls back to `custom` if routing fails. Supports multi-agent routing (parallel calls).
+- `productAgent.ts` — NordGear product catalogue + order data injected into system prompt
+- `shippingAgent.ts` — NordGear shipping policy + order data injected into system prompt
+- `refundAgent.ts` — NordGear return policy + order data injected into system prompt
+- `customDataAgent.ts` — NordGear company info (hours, contact, policies). No order data.
 
-Each agent creates its own `GoogleGenerativeAI` instance using `process.env.GEMINI_API_KEY`. All agents use the `gemini-3-flash-preview` model.
+**Synthetic data:**
+
+- `data/orders.csv` — 50 synthetic NordGear e-commerce orders (loaded once at startup via `src/utils/loadOrders.ts`, cached in memory)
+- Agents that receive order data: `product`, `shipping`, `refund`
+- Demo questions: *"What is the status of order ORD-1042?"*, *"Can I return order ORD-1044?"*, *"Do the hiking boots come in wide fit?"*
+
+Each agent uses `process.env.GEMINI_API_KEY` and the `gemini-3-flash-preview` model.
+
+**Security:** `helmet` (security headers), `express-rate-limit` (100 req/15 min global, 10 req/min on `/api/chat`), CORS locked to `CORS_ORIGIN` env var (defaults to `http://localhost:<PORT>`).
 
 **To add a new agent:** add an entry to `AgentName` in `src/types.ts`, create a new agent file in `src/agents/`, register it in the `agentMap` and routing prompt in `orchestrator.ts`, and add a chip to `public/index.html`.
