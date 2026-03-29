@@ -1,6 +1,16 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Environment variables
 .env
+.env.*
+
+# Local tool configs (not for sharing)
+.claude/
 .gstack/
-CLAUDE.MD
+
+# Internal planning / AI artifacts
 DESIGN.md
