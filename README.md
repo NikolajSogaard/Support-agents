@@ -1,0 +1,79 @@
+# Dispatch
+
+**Multi-agent support orchestration POC** — watch the AI route your question to the right specialist in real time.
+
+Ask a question. The orchestrator analyses it, picks the right agent, and you see the decision happen live — chips pulse while routing, then the chosen one snaps into focus.
+
+---
+
+## Demo
+
+**1. Initial state**
+
+![Dispatch initial state](docs/demo-1-initial.png)
+
+**2. Routing — all agents under consideration**
+
+![Routing in progress](docs/demo-2-routing.png)
+
+**3. Answer — routed to Shipping agent**
+
+![Answer from Shipping agent](docs/demo-3-answer.png)
+
+---
+
+## Try these questions
+
+| Question | Routes to |
+|---|---|
+| `What is the status of order ORD-1042?` | Shipping agent |
+| `Can I return order ORD-1044?` | Refund agent |
+| `Do the hiking boots come in wide fit?` | Product agent |
+| `What are your opening hours?` | Custom data agent |
+| `Has Sofia's refund been processed?` | Refund agent |
+
+---
+
+## Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Add your Gemini API key
+echo "GEMINI_API_KEY=your_key_here" > .env
+
+# Run (dev mode, no build)
+npm run dev
+
+# Or build and run
+npm run build && npm start
+```
+
+Open `http://localhost:3000`.
+
+---
+
+## Architecture
+
+```
+POST /api/chat
+    │
+    ▼
+orchestrator.ts  ──→  Gemini decides which agent(s)
+    │
+    ├──→ productAgent.ts    (products, specs, pricing)
+    ├──→ shippingAgent.ts   (tracking, delivery times)
+    ├──→ refundAgent.ts     (returns, cancellations)
+    └──→ customDataAgent.ts (company info, hours)
+```
+
+Responses stream back via **Server-Sent Events**. Each SSE event drives the chip animation:
+
+- `routing { status: "thinking" }` → all chips pulse
+- `routing { status: "decided" }` → chosen chip snaps, others dim
+- `agent_answer` → answer streams in with "Routed to: X" label
+
+Agents that handle order-specific questions (shipping, refund, product) receive the full `data/orders.csv` (50 synthetic NordGear orders) injected into their system prompt. No database — the LLM finds the relevant row naturally.
+
+**Stack:** Node.js · TypeScript · Express · Gemini (`gemini-3-flash-preview`) · Vanilla JS
