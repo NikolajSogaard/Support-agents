@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "WebSearch",
+      "WebFetch(domain:www.emerge.haus)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:fuselabcreative.com)",
+      "Bash(B=~/.claude/skills/gstack/browse/dist/browse)",
+      "Bash($B goto:*)",
+      "Bash($B screenshot:*)",
+      "Bash($B snapshot:*)",
+      "Bash($B fill:*)",
+      "Bash($B click:*)",
+      "Bash(convert --version)",
+      "Bash(python3 -c \"from PIL import Image; print\\(''PILLOW_OK''\\)\")",
+      "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(python3 -m pip install Pillow --quiet)",
+      "Bash(B=~/.claude/skills/gstack/browse/dist/browse $B status)",
+      "Bash(cd \"/c/Users/nikol/OneDrive/Dokumenter/GitHub/Support agents\" npm install --save-dev gif-encoder-2 jimp)",
+      "Bash(node -e \"require\\(''gif-encoder-2''\\); console.log\\(''GIF_OK''\\)\")",
+      "Bash(node -e \"require\\(''jimp''\\); console.log\\(''JIMP_OK''\\)\")",
+      "Bash(node scripts/make-gif.mjs)",
+      "Bash(node -e \"const j = require\\(''jimp''\\); console.log\\(j.Jimp?.prototype?.constructor?.name\\); console.log\\(Object.keys\\(j\\).slice\\(0,20\\)\\)\")",
+      "Bash(node -e \"import\\(''jimp''\\).then\\(m => console.log\\(Object.keys\\(m\\).slice\\(0,20\\)\\)\\)\")",
+      "Bash(cd \"/c/Users/nikol/OneDrive/Dokumenter/GitHub/Support agents\" npm uninstall gif-encoder-2 jimp)"
+    ]
+  }
+}

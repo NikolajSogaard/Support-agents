@@ -48,3 +48,11 @@ Each agent uses `process.env.GEMINI_API_KEY` and the `gemini-3-flash-preview` mo
 **Security:** `helmet` (security headers), `express-rate-limit` (100 req/15 min global, 10 req/min on `/api/chat`), CORS locked to `CORS_ORIGIN` env var (defaults to `http://localhost:<PORT>`).
 
 **To add a new agent:** add an entry to `AgentName` in `src/types.ts`, create a new agent file in `src/agents/`, register it in the `agentMap` and routing prompt in `orchestrator.ts`, and add a chip to `public/index.html`.
+
+## gstack
+
+Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools — they are slow and unreliable.
+
+Available gstack skills:
+
+`/office-hours` `/plan-ceo-review` `/plan-eng-review` `/plan-design-review` `/design-consultation` `/design-shotgun` `/review` `/ship` `/land-and-deploy` `/canary` `/benchmark` `/browse` `/connect-chrome` `/qa` `/qa-only` `/design-review` `/setup-browser-cookies` `/setup-deploy` `/retro` `/investigate` `/document-release` `/codex` `/cso` `/autoplan` `/careful` `/freeze` `/guard` `/unfreeze` `/gstack-upgrade`

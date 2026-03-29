@@ -8,17 +8,7 @@ Ask a question. The orchestrator analyses it, picks the right agent, and you see
 
 ## Demo
 
-**1. Initial state**
-
-![Dispatch initial state](docs/demo-1-initial.png)
-
-**2. Routing — all agents under consideration**
-
-![Routing in progress](docs/demo-2-routing.png)
-
-**3. Answer — routed to Shipping agent**
-
-![Answer from Shipping agent](docs/demo-3-answer.png)
+![Dispatch demo](docs/demo.gif)
 
 ---
 
