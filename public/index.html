@@ -75,6 +75,59 @@
       transition: background 0.2s, box-shadow 0.2s;
     }
 
+    @keyframes chipPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.25); }
+      50%       { box-shadow: 0 0 0 7px rgba(37, 99, 235, 0); }
+    }
+
+    .agent-chip.considering {
+      border-color: #93c5fd;
+      background: #f0f7ff;
+      animation: chipPulse 1s ease-in-out infinite;
+    }
+
+    .agent-chip.considering .dot {
+      background: #93c5fd;
+    }
+
+    .agent-chip.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+      color: #2563eb;
+      transform: scale(1.08);
+      box-shadow: 0 0 0 3px #bfdbfe;
+      animation: none;
+    }
+
+    .agent-chip.selected .dot {
+      background: #2563eb;
+      box-shadow: 0 0 0 3px #bfdbfe;
+    }
+
+    .agent-chip.dimmed {
+      opacity: 0.35;
+      animation: none;
+    }
+
+    .routing-label {
+      font-size: 0.78rem;
+      color: #6b7280;
+      text-align: center;
+      min-height: 22px;
+      margin-top: -18px;
+      margin-bottom: 10px;
+      transition: opacity 0.3s;
+    }
+
+    .routing-label span {
+      background: #eff6ff;
+      color: #2563eb;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 600;
+      border: 1px solid #bfdbfe;
+    }
+
     .chat-container {
       width: 100%;
       max-width: 680px;
@@ -231,8 +284,8 @@
 </head>
 <body>
   <header>
-    <h1>Support Agents</h1>
-    <p>Ask anything — our AI routes your question to the right specialist(s).</p>
+    <h1>NordGear Support</h1>
+    <p>Ask anything — our AI routes your question to the right specialist.</p>
   </header>
 
   <div class="agents-bar">
@@ -250,13 +303,15 @@
     </div>
   </div>
 
+  <div class="routing-label" id="routing-label"></div>
+
   <div class="chat-container">
     <div class="messages" id="messages">
       <div class="empty-state" id="empty">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <p>Ask a question to get started.<br/>Try: "Can I get a refund for my shipped order #847291?"</p>
+        <p>Ask a question to get started.<br/>Try: "Where is order ORD-1042?" or "Can I return order ORD-1044?"</p>
       </div>
     </div>
     <div class="input-area">
@@ -294,13 +349,34 @@
     const pendingBubbles = {};
 
     // ── chip helpers ──────────────────────────────────────────────────────
-    function activateChips(agentArray) {
-      Object.entries(chips).forEach(([key, el]) =>
-        el.classList.toggle('active', agentArray.includes(key)));
+    function resetChips() {
+      Object.values(chips).forEach(el =>
+        el.classList.remove('active', 'considering', 'selected', 'dimmed'));
+      const labelEl = document.getElementById('routing-label');
+      if (labelEl) labelEl.innerHTML = '';
     }
 
-    function resetChips() {
-      Object.values(chips).forEach(el => el.classList.remove('active'));
+    function setChipsConsidering() {
+      Object.values(chips).forEach(el => {
+        el.classList.remove('selected', 'dimmed', 'active');
+        el.classList.add('considering');
+      });
+    }
+
+    function setChipsDecided(routes) {
+      Object.entries(chips).forEach(([key, el]) => {
+        el.classList.remove('considering', 'active');
+        if (routes.includes(key)) {
+          el.classList.add('selected');
+          el.classList.remove('dimmed');
+        } else {
+          el.classList.add('dimmed');
+          el.classList.remove('selected');
+        }
+      });
+      const names = routes.map(r => agentLabels[r] || r).join(', ');
+      const labelEl = document.getElementById('routing-label');
+      if (labelEl) labelEl.innerHTML = `Routed to: <span>${names}</span>`;
     }
 
     // ── DOM helpers ───────────────────────────────────────────────────────
@@ -396,11 +472,12 @@
       switch (event) {
         case 'routing':
           if (payload.status === 'thinking') {
+            setChipsConsidering();
             updateThinking('Routing your question...');
           } else if (payload.status === 'decided') {
+            setChipsDecided(payload.routes);
             const names = payload.routes.map(r => agentLabels[r] || r).join(', ');
             updateThinking(`Calling: ${names}...`);
-            activateChips(payload.routes);
           }
           break;
 
