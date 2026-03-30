@@ -30,8 +30,8 @@ Ask a question. The orchestrator analyses it, picks the right agent, and you see
 # Install dependencies
 npm install
 
-# Add your Gemini API key
-echo "GEMINI_API_KEY=your_key_here" > .env
+# Add your LLM API key (see Configuration below)
+echo "LLM_API_KEY=your_key_here" > .env
 
 # Run (dev mode, no build)
 npm run dev
@@ -44,13 +44,25 @@ Open `http://localhost:3000`.
 
 ---
 
+## Configuration
+
+This project uses a pluggable LLM backend. To swap in your preferred model:
+
+1. **Add your API key** to `.env`
+2. **Update the model** in `src/agents/orchestrator.ts` — replace the model ID with your chosen one
+3. **Update each agent** in `src/agents/` — same model ID swap
+
+Any LLM with a chat/completion API works. The orchestrator expects a JSON response with a `routes` array; the agents stream plain text.
+
+---
+
 ## Architecture
 
 ```
 POST /api/chat
     │
     ▼
-orchestrator.ts  ──→  Gemini decides which agent(s)
+orchestrator.ts  ──→  LLM decides which agent(s)
     │
     ├──→ productAgent.ts    (products, specs, pricing)
     ├──→ shippingAgent.ts   (tracking, delivery times)
@@ -64,6 +76,6 @@ Responses stream back via **Server-Sent Events**. Each SSE event drives the chip
 - `routing { status: "decided" }` → chosen chip snaps, others dim
 - `agent_answer` → answer streams in with "Routed to: X" label
 
-Agents that handle order-specific questions (shipping, refund, product) receive the full `data/orders.csv` (50 synthetic NordGear orders) injected into their system prompt. No database — the LLM finds the relevant row naturally.
+Agents that handle order-specific questions (shipping, refund, product) receive the full `data/orders.csv` injected into their system prompt. No database — the LLM finds the relevant row naturally.
 
-**Stack:** Node.js · TypeScript · Express · Gemini (`gemini-3-flash-preview`) · Vanilla JS
+**Stack:** Node.js · TypeScript · Express · Vanilla JS
